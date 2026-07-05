@@ -146,7 +146,7 @@ TARGETS = [
     ("irri2|de|amazon", "https://www.amazon.de/dp/B0GTZGSH9G", p_amazon, "de-DE,de;q=0.9"),
     ("s1|fr|amazon",    "https://www.amazon.fr/dp/B0CPSQBFNG", p_amazon, "fr-FR,fr;q=0.9"),
     ("v3|fr|amazon",    "https://www.amazon.fr/dp/B0GFW5VBDQ", p_amazon, "fr-FR,fr;q=0.9"),
-    ("irri2|fr|amazon", "https://www.amazon.fr/dp/B0GTZGSH9G", p_amazon, "fr-FR,fr;q=0.9"),
+    ("irri2|fr|amazon", "https://www.amazon.fr/dp/B0GLNNKX2R", p_amazon, "fr-FR,fr;q=0.9"),
     ("s1|es|amazon",    "https://www.amazon.es/dp/B0FD9K27GT", p_amazon, "es-ES,es;q=0.9"),
     ("v3|es|amazon",    "https://www.amazon.es/dp/B0GFW5VBDQ", p_amazon, "es-ES,es;q=0.9"),
     # 德国其他零售商
