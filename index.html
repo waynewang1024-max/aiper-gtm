@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aiper EU GTM · Price Monitor | Wayne Wang</title>
+<style>
+  :root{
+    --bg0:#0b1220; --bg1:#0e1526;
+    --card:rgba(255,255,255,.035); --card2:rgba(255,255,255,.07);
+    --line:rgba(148,180,255,.14); --line2:rgba(148,180,255,.28);
+    --txt:#eef2fa; --sub:#8fa0bf; --accent:#5eb1ff; --accent2:#7dd3fc;
+    --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
+    --aiper:#5eb1ff; --amazon:#fbbf24; --idealo:#34d399;
+    --poolsystems:#c084fc; --hornbach:#f472b6; --erobot:#a3e635; --mypiscine:#22d3ee;
+    --cdiscount:#fb923c; --boulanger:#f87171; --irripiscine:#2dd4bf; --leroymerlin:#a78bfa;
+    --beatbot:#c084fc; --wybot:#34d399; --zodiac:#fbbf24;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:linear-gradient(180deg,var(--bg0),var(--bg1) 42%,var(--bg0));
+    color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+    padding:30px 4vw 90px;line-height:1.6;min-height:100vh;position:relative
+  }
+  body::after{ /* WW 水印 */
+    content:"W&#8202;W";position:fixed;right:-8px;bottom:-56px;font-size:230px;font-weight:800;
+    font-family:Georgia,"Times New Roman",serif;letter-spacing:-18px;
+    color:rgba(94,177,255,.045);pointer-events:none;z-index:0;font-style:italic
+  }
+  header{display:flex;align-items:center;gap:16px;margin-bottom:6px;position:relative;z-index:1}
+  .wwlogo{
+    width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,#5eb1ff 0%,#7dd3fc 55%,#a5f3fc 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,serif;font-style:italic;font-weight:800;font-size:23px;color:#08101f;
+    letter-spacing:-2.5px;box-shadow:0 6px 22px rgba(94,177,255,.35)
+  }
+  h1{font-size:23px;letter-spacing:.2px}
+  .byline{font-size:12.5px;color:var(--sub);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+  .byline b{color:var(--accent2);font-weight:600}
+  h2{font-size:19px;margin:32px 0 8px;position:relative;z-index:1}
+  h2 small{font-size:12px;color:var(--sub);font-weight:400;margin-left:8px}
+  h3{font-size:15.5px;margin:24px 0 10px;color:var(--accent)}
+  h3 small{color:var(--sub);font-weight:400;font-size:12.5px}
+  .meta{color:var(--sub);font-size:13px;margin:10px 0 4px;position:relative;z-index:1}
+  .meta b{color:var(--txt)}
+  .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:11px 15px;font-size:13px;color:var(--sub);margin:12px 0;position:relative;z-index:1}
+  .note b{color:var(--txt)} .note.warn{border-left-color:var(--warn)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px;margin-bottom:10px;position:relative;z-index:1}
+  th{background:var(--card2);text-align:left;padding:9px 13px;font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  td{padding:9px 13px;border-top:1px solid var(--line);vertical-align:middle}
+  tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  tr:hover td{background:rgba(94,177,255,.06)}
+  .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap}
+  .strike{color:var(--sub);text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:400}
+  .diff-warn{color:var(--warn);font-weight:600}.diff-bad{color:var(--bad);font-weight:600}.diff-zero{color:var(--sub)}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .chip{display:inline-block;font-size:10.5px;border-radius:20px;padding:1.5px 9px;margin-left:6px;vertical-align:1px;border:1px solid}
+  .chip.official{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
+  .chip.tp{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.3)}
+  .chip.na{background:rgba(251,113,133,.1);color:var(--bad);border-color:rgba(251,113,133,.28)}
+  .chip.hit{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
+  .chip.above{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.3)}
+  .chip.below{background:rgba(251,113,133,.12);color:var(--bad);border-color:rgba(251,113,133,.3)}
+  .chip.notarget{background:var(--card2);color:var(--sub);border-color:var(--line)}
+  .chip.auto{background:rgba(94,177,255,.1);color:var(--accent);border-color:rgba(94,177,255,.3)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 6px;position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--bg0) 82%,transparent);padding:10px 0 12px}
+  .tab{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:24px;padding:8px 19px;font-size:13.5px;cursor:pointer;font-weight:600;backdrop-filter:blur(8px)}
+  .tab:hover{border-color:var(--line2);color:var(--txt)}
+  .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#08101f;border-color:transparent;box-shadow:0 4px 16px rgba(94,177,255,.3)}
+  .view{display:none;position:relative;z-index:1}.view.active{display:block}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:13px;margin:12px 0;position:relative;z-index:1}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .card h4{font-size:14px;margin-bottom:6px} .card p{font-size:12.5px;color:var(--sub)}
+  .kpi{font-size:21px;font-weight:700;margin:3px 0}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin:10px 0 20px;box-shadow:0 2px 14px rgba(0,0,0,.18);position:relative;z-index:1}
+  .chartbox .legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;margin:6px 0 8px}
+  .legend span{cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px;color:var(--sub)}
+  .legend .dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .legend .off{opacity:.3;text-decoration:line-through}
+  svg text{fill:var(--sub);font-size:10px}
+  .rangebtns{display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle}
+  .rangebtns button{background:var(--card2);border:1px solid var(--line);color:var(--sub);border-radius:16px;padding:2px 12px;font-size:12px;cursor:pointer}
+  .rangebtns button.active{color:#08101f;background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;font-weight:600}
+  .keepa img{width:100%;max-width:840px;border-radius:10px;background:#fff;display:block;margin-top:8px}
+  .calctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0;position:relative;z-index:1}
+  select,input[type=date],input[type=number]{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:7px 11px;font-size:13px}
+  input[type=number]{width:110px}
+  .btn{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:7px 15px;font-size:13px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#08101f;border-color:transparent;font-weight:600}
+  .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;max-width:960px;margin-top:12px;position:relative;z-index:1}
+  .calhead{text-align:center;font-size:11.5px;color:var(--sub);padding:4px 0;letter-spacing:.06em}
+  .calcell{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:66px;padding:7px 9px;cursor:pointer;position:relative}
+  .calcell:hover{border-color:var(--accent)}
+  .calcell.empty{background:transparent;border:none;cursor:default}
+  .calcell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 14px rgba(94,177,255,.25)}
+  .calcell .d{font-size:11.5px;color:var(--sub)} .calcell .t{font-size:14px;font-weight:700;margin-top:5px}
+  .calcell .t.unset{color:rgba(143,160,191,.3);font-weight:400}
+  .calcell input{width:100%;margin-top:4px;padding:3px 6px;font-size:13px;background:var(--card2);border:1px solid var(--line2);color:var(--txt);border-radius:6px}
+  .rangewrap{margin:14px 0;position:relative;z-index:1}
+  .rangerow{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:13px}
+  .rangerow .lbl{width:220px;flex-shrink:0;text-align:right;color:var(--sub)} .rangerow .lbl b{color:var(--txt)}
+  .track{position:relative;flex:1;height:22px;background:var(--card2);border-radius:8px;overflow:hidden}
+  .band{position:absolute;top:3px;bottom:3px;border-radius:6px;opacity:.9;display:flex;align-items:center;justify-content:center;font-size:11px;color:#08101f;font-weight:700;white-space:nowrap;min-width:56px}
+  .axis{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-left:232px;margin-top:2px}
+  .changes{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0;position:relative;z-index:1}
+  .changes .item{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .changes .item:last-child{border-bottom:none}
+  .changes .ts{color:var(--sub);font-size:11.5px;margin-right:8px;font-variant-numeric:tabular-nums}
+  .shops{font-size:11.5px;color:var(--sub);margin-top:3px}
+  .shops .edit{cursor:pointer;color:var(--accent)}
+  .howto{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:36px;font-size:13px;color:var(--sub);position:relative;z-index:1}
+  .howto h3{margin-top:0} .howto ol{margin-left:18px} .howto li{margin:5px 0}
+  code{background:var(--card2);border-radius:5px;padding:1px 6px;font-size:12px}
+  .editable{border-bottom:1px dashed var(--sub);cursor:text}
+  .toolbar{margin:24px 0 6px;position:relative;z-index:1} .toolbar .btn{margin-right:8px}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:1}
+  footer b{color:var(--accent2)}
+  @media print{body{background:#fff;color:#111}body::after{display:none}.tabs{display:none}.view{display:block!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wwlogo">W&#8202;W</div>
+  <div>
+    <h1>Aiper EU GTM · Price Monitor</h1>
+    <div class="byline">Curated by <b>Wayne Wang</b> · Germany / France / Spain · Hourly Tracking</div>
+  </div>
+</header>
+<div class="meta">
+  最近记录：<b id="lastRecord">—</b> ｜ 自动抓取：<b>每小时一次</b>（aiper.store、Amazon×3、eRobot、Boulanger、Irripiscine、pool-systems）
+  ｜ 今天：<b id="todayLabel"></b>
+  ｜ <span style="color:var(--warn)">Idealo / Hornbach / Cdiscount / MyPiscine / Leroy Merlin 有反爬 → 数据为快照价，点链接复核后可在表内改价</span>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div id="views"></div>
+
+<div class="toolbar">
+  <button class="btn primary" onclick="exportAll()">📥 导出全部数据 JSON</button>
+  <button class="btn" onclick="document.getElementById('importFile').click()">📤 导入 JSON</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importAll(this)">
+  <button class="btn" onclick="window.print()">🖨 打印 / 存 PDF</button>
+  <button class="btn danger" onclick="resetLocal()">♻️ 清除本地修改</button>
+</div>
+
+<div class="howto">
+  <h3>📌 GTM 文档使用手册</h3>
+  <ol>
+    <li><b>小时级记录</b>：本机每小时自动抓一次可访问渠道的价格（写入 <code>aiper-gtm-feed.js</code>）。趋势图切到「24小时」即可看到渠道的小时内变价；「🔔 价格变动」区自动列出最近 48 小时内发生的所有变价。</li>
+    <li><b>常驻开机生效</b>：双击 <code>~/aiper-gtm/启用每小时自动记录.command</code> 一次即可（电脑关机/睡眠期间不记录）。</li>
+    <li><b>反爬渠道</b>（Idealo/Hornbach/Cdiscount/MyPiscine/LeroyMerlin.es）：点行内「复核」看实时价，点价格单元格直接改，修改会自动记入当前小时的历史。</li>
+    <li><b>Idealo 最低价商家</b>：Idealo 行下方标注最低价来源商家，点 ✎ 可编辑（点开 Idealo 页面即可看到商家排序）。</li>
+    <li><b>价格日历</b>：为每产品×国家设每日目标价，国家页自动比对：达标 / 高于 / 低于⚠。</li>
+    <li><b>备份</b>：目标价与手动修改存在浏览器本地；换设备前「导出 JSON」→ 新设备「导入」。</li>
+  </ol>
+</div>
+
+<footer>© 2026 <b>Wayne Wang</b> · Aiper EU GTM · Internal &amp; Confidential</footer>
+
+<script src="aiper-gtm-feed.js"></script>
+<script>
+/* ════════════════ 内置基础数据（渠道定义 + 首日快照） ════════════════ */
+const SEED_TS = "2026-07-03 18:00";
+const LS_KEY = "aiper-gtm-v3";
+
+const COUNTRIES = { de:{flag:"🇩🇪",name:"德国"}, fr:{flag:"🇫🇷",name:"法国"}, es:{flag:"🇪🇸",name:"西班牙"} };
+const CH_META = {
+  aiper:{label:"Aiper.com 官网", color:"var(--aiper)", auto:true},
+  amazon:{label:"Amazon 官方店", color:"var(--amazon)", auto:true},
+  idealo:{label:"Idealo 最低价", color:"var(--idealo)", auto:false},
+  poolsystems:{label:"pool-systems.de", color:"var(--poolsystems)", auto:true},
+  hornbach:{label:"Hornbach", color:"var(--hornbach)", auto:false},
+  erobot:{label:"eRobot Piscine", color:"var(--erobot)", auto:true},
+  mypiscine:{label:"MyPiscine", color:"var(--mypiscine)", auto:false},
+  cdiscount:{label:"Cdiscount", color:"var(--cdiscount)", auto:false},
+  boulanger:{label:"Boulanger", color:"var(--boulanger)", auto:true},
+  irripiscine:{label:"Irripiscine", color:"var(--irripiscine)", auto:true},
+  leroymerlin:{label:"Leroy Merlin", color:"var(--leroymerlin)", auto:false}
+};
+
+const PRODUCTS = [
+  {
+    id:"s1", name:"Scuba S1", msrp:699,
+    asin:{de:"B0DL46SD6W", fr:"B0CPSQBFNG", es:"B0FD9K27GT"},
+    channels:{
+      de:[
+        {key:"aiper", price:521, url:"https://aiper.store/de/products/aiper-scuba-s1-kabelloser-robotischer-poolreiniger", official:true, note:"⚠泛欧 /eu 页仍显示 €499，与分站不一致"},
+        {key:"amazon", price:521, strike:699, url:"https://www.amazon.de/dp/B0DL46SD6W", official:true},
+        {key:"idealo", price:499, url:"https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=aiper%20scuba%20s1", note:"快照", shopsDefault:"待复核（点链接看商家）"},
+        {key:"poolsystems", price:494, url:"https://www.pool-systems.de/Poolroboter/Aiper-Scuba-S1.html"},
+        {key:"hornbach", price:549, url:"https://www.hornbach.de/p/aiper-scuba-s1-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/", note:"快照"}
+      ],
+      fr:[
+        {key:"aiper", price:521, url:"https://aiper.store/fr/products/scuba-s1-nettoyeur-de-piscine-robotis%C3%A9-sans-fil", official:true},
+        {key:"amazon", price:599, url:"https://www.amazon.fr/dp/B0CPSQBFNG", official:true},
+        {key:"idealo", price:494, url:"https://www.idealo.fr/prix/203961543/aiper-scuba-s1.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
+        {key:"erobot", price:599, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-sans-fil-aiper-scuba-s1"},
+        {key:"mypiscine", price:549, strike:599, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html", note:"快照"},
+        {key:"cdiscount", price:569.99, url:"https://www.cdiscount.com/jardin/r-robot+piscine+aiper+s1.html", note:"快照"},
+        {key:"boulanger", price:599.99, url:"https://www.boulanger.com/ref/1220192"},
+        {key:"irripiscine", price:599, url:"https://www.irripiscine.fr/produit/robot-de-piscine-aiper-scuba-s1-sans-fil"}
+      ],
+      es:[
+        {key:"aiper", price:521, url:"https://aiper.store/es/products/aiper-scuba-s1-limpiador-de-piscina-rob%C3%B3tico-sin-cables", official:true},
+        {key:"amazon", price:521, url:"https://www.amazon.es/dp/B0FD9K27GT", official:true},
+        {key:"idealo", price:499, url:"https://www.idealo.es/precios/206184168/aiper-scuba-s1-2025.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
+        {key:"leroymerlin", price:499, strike:599, url:"https://www.leroymerlin.es/productos/robot-limpiafondos-aiper-scuba-s1-2026-para-fondo-y-pared-con-autonomia-de-180-min-93837415.html", note:"促销至 07-20，快照"}
+      ]
+    }
+  },
+  {
+    id:"v3", name:"Scuba V3", msrp:1299,
+    asin:{de:"B0GFW5VBDQ", fr:"B0GFW5VBDQ", es:"B0GFW5VBDQ"},
+    channels:{
+      de:[
+        {key:"aiper", price:849, url:"https://aiper.store/de/products/aiper-scuba-v3", official:true},
+        {key:"amazon", price:899, strike:1299, url:"https://www.amazon.de/dp/B0GFW5VBDQ", official:true},
+        {key:"idealo", price:899, url:"https://www.idealo.de/preisvergleich/OffersOfProduct/210287510_-scuba-v3-aiper.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
+        {key:"hornbach", price:999, url:"https://www.hornbach.de/c/garten/pools/poolpflege-poolreinigung/poolroboter/S21652/f/Marke=Aiper", note:"快照"}
+      ],
+      fr:[
+        {key:"aiper", price:849, url:"https://aiper.store/fr/products/aiper-scuba-v3", official:true},
+        {key:"amazon", price:899, url:"https://www.amazon.fr/dp/B0GFW5VBDQ", official:true},
+        {key:"idealo", price:805, url:"https://www.idealo.fr/prix/210287510/aiper-scuba-v3.html", note:"⚠低于官网", shopsDefault:"疑似 MyPiscine（€809 快照）— 点链接确认"},
+        {key:"erobot", price:999, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-piscine-sans-fil-aiper-scuba-v3"},
+        {key:"mypiscine", price:809, strike:999, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html", note:"⚠低于官网，快照"},
+        {key:"cdiscount", price:null, url:"https://www.cdiscount.com/search/10/aiper+scuba+v3.html", note:"待复核"},
+        {key:"boulanger", price:1447.85, url:"https://www.boulanger.com/ref/1235250", note:"⚠明显未跟价"},
+        {key:"irripiscine", price:899, url:"https://www.irripiscine.fr/produit/robot-piscine-sans-fil-aiper-scuba-v3"}
+      ],
+      es:[
+        {key:"aiper", price:849, url:"https://aiper.store/es/products/aiper-scuba-v3", official:true},
+        {key:"amazon", price:899, strike:1299, url:"https://www.amazon.es/dp/B0GFW5VBDQ", official:true},
+        {key:"idealo", price:849, url:"https://www.idealo.es/precios/210287510/aiper-scuba-v3.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
+        {key:"leroymerlin", price:null, url:"https://www.leroymerlin.es/productos/marcas/aiper/", note:"未上架"}
+      ]
+    }
+  },
+  {
+    id:"irri2", name:"IrriSense 2（智能灌溉）", msrp:499,
+    asin:{de:"B0GTZGSH9G", fr:"B0GTZGSH9G", es:null},
+    channels:{
+      de:[
+        {key:"aiper", price:399, url:"https://aiper.store/de/products/aiper-irrisense-2", official:true},
+        {key:"amazon", price:429, strike:599, url:"https://www.amazon.de/dp/B0GTZGSH9G", official:true},
+        {key:"idealo", price:null, url:"https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=aiper%20irrisense%202", note:"二代暂未收录"},
+        {key:"hornbach", price:null, url:"https://www.hornbach.de/s/aiper%20irrisense", note:"未上架"}
+      ],
+      fr:[
+        {key:"aiper", price:399, url:"https://aiper.store/fr/products/aiper-irrisense-2", official:true},
+        {key:"amazon", price:514.96, url:"https://www.amazon.fr/dp/B0GTZGSH9G", tp:true, note:"仅第三方卖家"},
+        {key:"idealo", price:null, url:"https://www.idealo.fr/prix/207350924/aiper-irrisense-445-m.html", note:"仅一代页面"},
+        {key:"boulanger", price:null, url:"https://www.boulanger.com/resultats?tr=aiper+irrisense", note:"待复核"},
+        {key:"cdiscount", price:null, url:"https://www.cdiscount.com/search/10/aiper+irrisense.html", note:"待复核"}
+      ],
+      es:[
+        {key:"aiper", price:399, url:"https://aiper.store/es/products/aiper-irrisense-2", official:true},
+        {key:"amazon", price:null, url:"https://www.amazon.es/s?k=aiper+irrisense+2", note:"未上架——渠道缺口"},
+        {key:"idealo", price:null, url:"https://www.idealo.es/resultados.html?q=aiper%20irrisense", note:"未收录"},
+        {key:"leroymerlin", price:null, url:"https://www.leroymerlin.es/productos/marcas/aiper/", note:"未上架"}
+      ]
+    }
+  }
+];
+
+const COMPETITORS = [
+  { brand:"Beatbot", color:"var(--beatbot)", channelNote:"官网 D2C 为主；Amazon DE/ES 无整机 listing", storeUrl:"https://eu.beatbot.com",
+    models:[
+      {m:"Sora 10（入门无绳）", official:449, msrp:699, amz:"–"},
+      {m:"Sora 30", official:578, msrp:899, amz:"–"},
+      {m:"Sora 70", official:1049, msrp:1499, amz:"–"},
+      {m:"AquaSense 2", official:1099, msrp:1699, amz:"–"},
+      {m:"AquaSense 2 Pro", official:1799, msrp:2699, amz:"–"},
+      {m:"AquaSense 2 Ultra", official:2699, msrp:3850, amz:"–"},
+      {m:"AquaSense X（旗舰）", official:4250, msrp:null, amz:"–"}
+    ], band:[449,2699] },
+  { brand:"Wybot", color:"var(--wybot)", channelNote:"官网 + Amazon 双渠道，价格咬合一致", storeUrl:"https://www.eu.wybotpool.com",
+    models:[
+      {m:"A1（入门）", official:199.99, msrp:299.99, amz:"–"},
+      {m:"B1", official:379.99, msrp:499.99, amz:"–"},
+      {m:"C1 (2026)", official:466, msrp:549.99, amz:"DE €549 / ES €494.99"},
+      {m:"C2", official:541.99, msrp:699.99, amz:"DE €541.98 / ES €541.99"},
+      {m:"C2 Vision (AI)", official:721.99, msrp:949.99, amz:"–"},
+      {m:"S2", official:799.99, msrp:899.99, amz:"–"},
+      {m:"S2 Solar / Solar Vision", official:1399.99, msrp:1999.99, amz:"–", range2:1599.99},
+      {m:"S3（自排污旗舰）", official:2499.99, msrp:2999.99, amz:"–"}
+    ], band:[199.99,2499.99] },
+  { brand:"Zodiac (Fluidra)", color:"var(--zodiac)", channelNote:"无 D2C；经销商 + Amazon + 泳池专业渠道（法国最强）", storeUrl:"https://www.idealo.fr/cat/18287F1472094/robots-de-piscine.html",
+    models:[
+      {m:"MX 系列（水力，入门）", official:null, msrp:null, amz:"DE €367.99 / ES €319"},
+      {m:"Tornax / Pixel（电动入门）", official:null, msrp:null, amz:"ES €415–499 / DE €525–749"},
+      {m:"Freedom（无绳新线）", official:null, msrp:null, amz:"DE €649 / ES €649–849"},
+      {m:"CNX 系列（有线中端）", official:null, msrp:null, amz:"DE €799–999 / ES €853–999"},
+      {m:"Vortex 4WD（主力）", official:null, msrp:null, amz:"DE €854–1090 / ES €799–1199 / FR €795 起"},
+      {m:"Alpha iQ（高端）", official:null, msrp:null, amz:"DE €1139–1145 / ES €1072–1198"}
+    ], band:[319,1250] }
+];
+const AIPER_BAND = [499, 999];
+
+/* 首日快照 → 历史种子 */
+const SEED_HISTORY = [{ ts: SEED_TS, prices:(() => {
+  const o = {};
+  PRODUCTS.forEach(p => Object.entries(p.channels).forEach(([cc, chs]) =>
+    chs.forEach(c => { if (c.price != null) o[p.id+"|"+cc+"|"+c.key] = c.price; })));
+  return o;
+})() }];
+
+/* ════════════════ 状态 ════════════════ */
+let state = { targets:{}, manualHistory:[], idealoShops:{}, hiddenSeries:{} };
+try { const s = JSON.parse(localStorage.getItem(LS_KEY)); if (s && typeof s==="object") state = Object.assign(state, s); } catch(e){}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+function histAll(){
+  const feed = (typeof window.GTM_FEED !== "undefined" && Array.isArray(window.GTM_FEED)) ? window.GTM_FEED : [];
+  const byTs = {};
+  [...SEED_HISTORY, ...feed, ...(state.manualHistory||[])].forEach(h => {
+    byTs[h.ts] = Object.assign(byTs[h.ts]||{}, h.prices);
+  });
+  return Object.keys(byTs).sort().map(ts => ({ts, prices:byTs[ts]}));
+}
+function seriesFor(key){
+  const out = [];
+  histAll().forEach(h => { if (h.prices[key] != null) out.push({ts:h.ts, v:h.prices[key]}); });
+  return out;
+}
+function curPrice(pid, cc, chKey){
+  const s = seriesFor(pid+"|"+cc+"|"+chKey);
+  if (s.length) return s[s.length-1].v;
+  const ch = (PRODUCTS.find(p=>p.id===pid).channels[cc]||[]).find(c=>c.key===chKey);
+  return ch ? ch.price : null;
+}
+function targetFor(pid, cc, dateStr){
+  const v = state.targets[pid+"|"+cc+"|"+dateStr];
+  return v === undefined ? null : v;
+}
+const fmt = n => n==null ? "—" : "€"+Number(n).toLocaleString("de-DE",{minimumFractionDigits:(n%1?2:0),maximumFractionDigits:2});
+const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const nowHourTs = () => todayStr()+" "+String(new Date().getHours()).padStart(2,"0")+":00";
+const tsToMs = ts => new Date(ts.replace(" ","T")).getTime();
+
+/* ════════════════ 价格变动检测 ════════════════ */
+function recentChanges(hours, ccFilter){
+  const out = [];
+  const keys = new Set();
+  histAll().forEach(h => Object.keys(h.prices).forEach(k => keys.add(k)));
+  const cutoff = Date.now() - hours*3600e3;
+  keys.forEach(k => {
+    const [pid, cc, ch] = k.split("|");
+    if (ccFilter && cc !== ccFilter) return;
+    const s = seriesFor(k);
+    for (let i = s.length-1; i > 0; i--){
+      if (tsToMs(s[i].ts) < cutoff) break;
+      if (s[i].v !== s[i-1].v){
+        out.push({ts:s[i].ts, pid, cc, ch, from:s[i-1].v, to:s[i].v});
+      }
+    }
+  });
+  return out.sort((a,b) => b.ts.localeCompare(a.ts));
+}
+function changesBox(ccFilter){
+  const ch48 = recentChanges(48, ccFilter);
+  const inner = ch48.length ? ch48.map(c => {
+    const p = PRODUCTS.find(x=>x.id===c.pid);
+    const pct = ((c.to-c.from)/c.from*100).toFixed(1);
+    const cls = c.to > c.from ? "diff-warn" : "diff-bad";
+    return `<div class="item"><span class="ts">${c.ts}</span>
+      ${COUNTRIES[c.cc].flag} <b>${p.name}</b> · ${CH_META[c.ch].label}：
+      <span class="price">${fmt(c.from)}</span> → <span class="price ${cls}">${fmt(c.to)}</span>
+      <span class="${cls}">(${pct>0?"+":""}${pct}%)</span></div>`;
+  }).join("") : `<div style="font-size:13px;color:var(--sub)">近 48 小时无变价记录 —— 每小时自动检测中 ✓</div>`;
+  return `<div class="changes"><b style="font-size:14px">🔔 价格变动（近 48 小时）</b>${inner}</div>`;
+}
+
+/* ════════════════ Tab 框架 ════════════════ */
+const TABS = [
+  {id:"overview", label:"🌍 三国总览 & 竞品"},
+  {id:"de", label:"🇩🇪 德国"},
+  {id:"fr", label:"🇫🇷 法国"},
+  {id:"es", label:"🇪🇸 西班牙"},
+  {id:"calendar", label:"📅 价格日历"}
+];
+let activeTab = location.hash.replace("#","") || "overview";
+if (!TABS.some(t=>t.id===activeTab)) activeTab = "overview";
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = TABS.map(t =>
+    `<div class="tab ${t.id===activeTab?"active":""}" onclick="switchTab('${t.id}')">${t.label}</div>`).join("");
+}
+function switchTab(id){ activeTab = id; location.hash = id; renderTabs(); renderViews(); }
+function renderViews(){
+  const v = document.getElementById("views");
+  if (activeTab === "overview") v.innerHTML = viewOverview();
+  else if (activeTab === "calendar") v.innerHTML = viewCalendar();
+  else v.innerHTML = viewCountry(activeTab);
+  bindEditables();
+  if (COUNTRIES[activeTab]) drawAllTrends(activeTab);
+}
+
+/* ════════════════ 总览 ════════════════ */
+function diffSpan(price, base){
+  if (price==null || base==null) return '<span class="diff-zero">—</span>';
+  const pct = (price-base)/base*100;
+  if (Math.abs(pct) < .5) return '<span class="diff-zero">±0%</span>';
+  const cls = pct < 0 ? "diff-bad" : (pct > 6 ? "diff-bad" : "diff-warn");
+  return `<span class="${cls}">${pct>0?"▲+":"▼"}${pct.toFixed(1)}%</span>`;
+}
+function targetChip(pid, cc, actual){
+  const t = targetFor(pid, cc, todayStr());
+  if (t == null) return '<span class="chip notarget">未设目标</span>';
+  if (actual == null) return '<span class="chip na">无价格</span>';
+  const pct = (actual-t)/t*100;
+  if (Math.abs(pct) <= 1) return `<span class="chip hit">达标 ${fmt(t)}</span>`;
+  if (pct > 0) return `<span class="chip above">高于目标 ${fmt(t)} (+${pct.toFixed(1)}%)</span>`;
+  return `<span class="chip below">低于目标 ${fmt(t)} (${pct.toFixed(1)}%)⚠</span>`;
+}
+function viewOverview(){
+  let html = changesBox(null);
+  html += `<h2>任务 1｜三国价格一致性总览 <small>基准 = Aiper.com 官网价（三国同价）；目标价比对在各国家 Tab</small></h2>`;
+  PRODUCTS.forEach(p => {
+    const base = curPrice(p.id, "de", "aiper");
+    const chKeys = [...new Set(Object.values(p.channels).flat().map(c=>c.key))];
+    html += `<h3>${p.name} <small>官网基准 ${fmt(base)}（MSRP ${fmt(p.msrp)}）</small></h3>
+    <table><thead><tr><th style="width:24%">渠道</th>${Object.values(COUNTRIES).map(c=>`<th>${c.flag} ${c.name}</th>`).join("")}</tr></thead><tbody>`;
+    chKeys.forEach(chKey => {
+      html += `<tr><td><span style="color:${CH_META[chKey].color}">●</span> ${CH_META[chKey].label}${CH_META[chKey].auto?'<span class="chip auto">自动</span>':''}</td>`;
+      Object.keys(COUNTRIES).forEach(cc => {
+        const ch = (p.channels[cc]||[]).find(c=>c.key===chKey);
+        if (!ch) { html += `<td class="diff-zero">—</td>`; return; }
+        const price = curPrice(p.id, cc, chKey);
+        html += `<td>${price!=null ? `<span class="price">${fmt(price)}</span> ${chKey!=="aiper"?diffSpan(price,base):""}` : `<span class="chip na">${ch.note||"无"}</span>`}</td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+  });
+  html += `<h2>任务 2｜竞品价格区间 <small>Beatbot · Wybot · Zodiac（官网 D2C 为欧元区统一价）</small></h2>
+  <div class="rangewrap">` + brandBands() + `</div>`;
+  COMPETITORS.forEach(c => {
+    html += `<h3 style="color:${c.color}">${c.brand} <small>｜${c.channelNote} ｜ <a href="${c.storeUrl}" target="_blank">渠道入口 ↗</a></small></h3>
+    <table><thead><tr><th style="width:30%">机型</th><th>官网现售价</th><th>官网 MSRP</th><th>Amazon 参考价</th></tr></thead><tbody>`;
+    c.models.forEach(m => {
+      html += `<tr><td>${m.m}</td><td class="price">${m.official!=null?fmt(m.official)+(m.range2?" – "+fmt(m.range2):""):"（无 D2C）"}</td>
+      <td class="price" style="color:var(--sub)">${m.msrp!=null?fmt(m.msrp):"—"}</td><td>${m.amz}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  });
+  return html;
+}
+function brandBands(){
+  const MIN=150, MAX=4400;
+  const pos = v => (Math.log(v)-Math.log(MIN))/(Math.log(MAX)-Math.log(MIN))*100;
+  const rows = [{lbl:"<b>Aiper</b>（S1 → X1）", band:AIPER_BAND, color:"var(--aiper)"},
+    ...COMPETITORS.map(c=>({lbl:`<b>${c.brand}</b>`, band:c.band, color:c.color}))];
+  return rows.map(r => {
+    const l=pos(r.band[0]), w=pos(r.band[1])-pos(r.band[0]);
+    return `<div class="rangerow"><div class="lbl">${r.lbl}</div><div class="track">
+      <div class="band" style="left:${l}%;width:${w}%;background:${r.color}">€${r.band[0]} – €${r.band[1]}</div></div></div>`;
+  }).join("") + `<div class="axis"><span>€150</span><span>€500</span><span>€1000</span><span>€2000</span><span>€4400（对数轴）</span></div>`;
+}
+
+/* ════════════════ 国家视图 ════════════════ */
+let keepaRange = 90;
+function idealoShopsLine(pid, cc, ch){
+  if (ch.key !== "idealo") return "";
+  const k = pid+"|"+cc;
+  const txt = state.idealoShops[k] || ch.shopsDefault || "待复核";
+  return `<div class="shops">🏷 最低价商家：${txt} <span class="edit" onclick="editShops('${pid}','${cc}')">✎</span></div>`;
+}
+function editShops(pid, cc){
+  const k = pid+"|"+cc;
+  const cur = state.idealoShops[k] || "";
+  const v = prompt("Idealo 最低价来源商家（打开 Idealo 页面查看商家排序后填写）：", cur);
+  if (v !== null){ if (v.trim()) state.idealoShops[k] = v.trim(); else delete state.idealoShops[k]; save(); renderViews(); }
+}
+function viewCountry(cc){
+  const c = COUNTRIES[cc];
+  let html = changesBox(cc);
+  html += `<h2>${c.flag} ${c.name}｜渠道价格 & 目标价比对 <small>「自动」渠道每小时抓取；其余渠道点「复核」后可直接改价</small></h2>`;
+  PRODUCTS.forEach(p => {
+    const chs = p.channels[cc] || [];
+    const base = curPrice(p.id, cc, "aiper");
+    html += `<h3>${p.name} <small>官网基准 ${fmt(base)}</small></h3>
+    <table><thead><tr><th style="width:27%">渠道</th><th>现售价（点击编辑）</th><th>vs 官网</th><th>vs 今日目标价</th><th>来源</th></tr></thead><tbody>`;
+    chs.forEach(ch => {
+      const price = curPrice(p.id, cc, ch.key);
+      const label = ch.label || CH_META[ch.key].label;
+      html += `<tr>
+        <td><span style="color:${CH_META[ch.key].color}">●</span> ${label}${ch.official?'<span class="chip official">官方</span>':''}${ch.tp?'<span class="chip tp">第三方</span>':''}${CH_META[ch.key].auto?'<span class="chip auto">自动</span>':''}${idealoShopsLine(p.id, cc, ch)}</td>
+        <td class="price">${price!=null
+          ? `<span class="editable" contenteditable data-pid="${p.id}" data-cc="${cc}" data-ch="${ch.key}">${price}</span> €${ch.strike?`<span class="strike">${fmt(ch.strike)}</span>`:""}`
+          : `<span class="chip na">${ch.note||"无"}</span> <a href="javascript:void(0)" style="font-size:12px" onclick="fillPrice('${p.id}','${cc}','${ch.key}')">填入价格</a>`}</td>
+        <td>${ch.key==="aiper" ? '<span class="diff-zero">基准</span>' : diffSpan(price, base)}</td>
+        <td>${targetChip(p.id, cc, price)}</td>
+        <td><a href="${ch.url}" target="_blank">复核 ↗</a>${ch.note&&price!=null?` <span style="font-size:11px;color:var(--warn)">${ch.note}</span>`:""}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    html += `<div class="chartbox">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center">
+        <span><b style="font-size:13px">📈 价格趋势（小时级）</b>
+          <span class="rangebtns">${[["24h",1],["7天",7],["30天",30],["全部",0]].map(([lb,d])=>`<button class="${d===trendRange?'active':''}" onclick="setTrendRange(${d})">${lb}</button>`).join("")}</span>
+        </span>
+        <span style="font-size:11px;color:var(--sub)">虚线 = 目标价 · 图例可点击显隐</span>
+      </div>
+      <div class="legend" id="legend-${p.id}-${cc}"></div>
+      <svg id="trend-${p.id}-${cc}" width="100%" height="235" viewBox="0 0 880 235" preserveAspectRatio="none"></svg>
+    </div>`;
+    const asin = p.asin[cc];
+    if (asin) {
+      html += `<div class="keepa"><b style="font-size:13px">🕰 Amazon.${cc} 长期历史（Keepa 实时图）</b>
+        <span class="rangebtns">${[30,90,365].map(r=>`<button class="${r===keepaRange?'active':''}" onclick="setKeepaRange(${r})">${r}天</button>`).join("")}</span>
+        <img loading="lazy" src="https://graph.keepa.com/pricehistory.png?asin=${asin}&domain=${cc}&new=1&amazon=1&salesrank=0&range=${keepaRange}&width=880&height=250" alt="keepa ${p.name}">
+      </div>`;
+    }
+  });
+  return html;
+}
+function setKeepaRange(r){ keepaRange = r; renderViews(); }
+function fillPrice(pid, cc, ch){
+  const v = prompt("输入当前实际价格（EUR，仅数字）：");
+  const n = parseFloat((v||"").replace(",","."));
+  if (!isNaN(n)) recordManual(pid+"|"+cc+"|"+ch, n);
+}
+function recordManual(key, val){
+  const ts = nowHourTs();
+  let entry = (state.manualHistory||[]).find(h => h.ts === ts);
+  if (!entry) { entry = {ts, prices:{}}; state.manualHistory.push(entry); }
+  entry.prices[key] = val;
+  save(); renderViews();
+}
+
+/* ════════════════ 趋势图（小时级） ════════════════ */
+let trendRange = 0; // 0=全部, 1/7/30 天
+function setTrendRange(d){ trendRange = d; renderViews(); }
+function drawAllTrends(cc){ PRODUCTS.forEach(p => drawTrend(p, cc)); }
+function drawTrend(p, cc){
+  const svg = document.getElementById(`trend-${p.id}-${cc}`);
+  const legendEl = document.getElementById(`legend-${p.id}-${cc}`);
+  if (!svg) return;
+  const chKeys = (p.channels[cc]||[]).map(c=>c.key);
+  const hiddenKey = k => p.id+"|"+cc+"|"+k;
+  const cutoff = trendRange ? Date.now() - trendRange*864e5 : 0;
+
+  let vals = [], allTs = [];
+  const series = chKeys.map(k => {
+    const pts = seriesFor(p.id+"|"+cc+"|"+k).filter(x => tsToMs(x.ts) >= cutoff);
+    vals.push(...pts.map(x=>x.v)); allTs.push(...pts.map(x=>tsToMs(x.ts)));
+    return {k, pts};
+  });
+  // 目标价（按日）
+  const tDates = Object.keys(state.targets).filter(k => k.startsWith(p.id+"|"+cc+"|")).map(k=>k.split("|")[2]).sort();
+  const tPts = tDates.map(d => ({ms:new Date(d+"T12:00").getTime(), v:state.targets[p.id+"|"+cc+"|"+d]}))
+                     .filter(x => x.ms >= cutoff);
+  vals.push(...tPts.map(x=>x.v)); allTs.push(...tPts.map(x=>x.ms));
+
+  if (!vals.length){ svg.innerHTML = '<text x="20" y="115">该时间范围内暂无数据</text>'; legendEl.innerHTML=""; return; }
+  let t0 = Math.min(...allTs), t1 = Math.max(...allTs);
+  if (t1 - t0 < 36e5) { t0 -= 6*36e5; t1 += 6*36e5; }
+  else { const pad = (t1-t0)*0.04; t0 -= pad; t1 += pad; }
+  const vmin = Math.min(...vals)*0.965, vmax = Math.max(...vals)*1.035;
+
+  const W=880,H=235,L=58,R=16,T=14,B=30;
+  const X = t => L + (t - t0)/(t1 - t0) * (W-L-R);
+  const Y = v => T + (1 - (v - vmin)/(vmax - vmin || 1)) * (H-T-B);
+  let out = "";
+  for (let i=0;i<=4;i++){
+    const v = vmin + (vmax-vmin)*i/4, y = Y(v);
+    out += `<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="rgba(148,180,255,.12)"/>
+            <text x="4" y="${y+3}">€${Math.round(v)}</text>`;
+  }
+  const spanH = (t1-t0)/36e5;
+  const nTicks = 6;
+  for (let i=0;i<=nTicks;i++){
+    const t = t0 + (t1-t0)*i/nTicks, d = new Date(t);
+    const lbl = spanH <= 72
+      ? `${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}时`
+      : `${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    out += `<text x="${X(t)-22}" y="${H-9}">${lbl}</text>`;
+  }
+  if (tPts.length && !state.hiddenSeries[hiddenKey("target")]){
+    const path = tPts.map((x,i)=>`${i?"L":"M"}${X(x.ms)},${Y(x.v)}`).join(" ");
+    out += `<path d="${path}" fill="none" stroke="#eef2fa" stroke-width="1.6" stroke-dasharray="6 5" opacity=".75"/>`;
+    tPts.forEach(x => out += `<circle cx="${X(x.ms)}" cy="${Y(x.v)}" r="3" fill="none" stroke="#eef2fa"><title>目标: ${fmt(x.v)}</title></circle>`);
+  }
+  series.forEach(s => {
+    if (!s.pts.length || state.hiddenSeries[hiddenKey(s.k)]) return;
+    const col = getComputedStyle(document.documentElement).getPropertyValue(CH_META[s.k].color.replace("var(","").replace(")","")) || "#5eb1ff";
+    const path = s.pts.map((x,i)=>`${i?"L":"M"}${X(tsToMs(x.ts))},${Y(x.v)}`).join(" ");
+    out += `<path d="${path}" fill="none" stroke="${col.trim()}" stroke-width="2"/>`;
+    s.pts.forEach(x => out += `<circle cx="${X(tsToMs(x.ts))}" cy="${Y(x.v)}" r="3.6" fill="${col.trim()}"><title>${CH_META[s.k].label} ${x.ts}: ${fmt(x.v)}</title></circle>`);
+  });
+  svg.innerHTML = out;
+  const items = [...chKeys.map(k=>({k, label:CH_META[k].label, color:CH_META[k].color})), {k:"target", label:"目标价", color:"#eef2fa"}];
+  legendEl.innerHTML = items.map(it =>
+    `<span class="${state.hiddenSeries[hiddenKey(it.k)]?"off":""}" onclick="toggleSeries('${p.id}','${cc}','${it.k}')">
+      <span class="dot" style="background:${it.color}"></span>${it.label}</span>`).join("");
+}
+function toggleSeries(pid, cc, k){
+  const key = pid+"|"+cc+"|"+k;
+  state.hiddenSeries[key] = !state.hiddenSeries[key];
+  save();
+  drawTrend(PRODUCTS.find(x=>x.id===pid), cc);
+}
+
+/* ════════════════ 价格日历 ════════════════ */
+let calMonth = todayStr().slice(0,7);
+let calPid = PRODUCTS[0].id, calCc = "de";
+function viewCalendar(){
+  const [y,m] = calMonth.split("-").map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const startWeekday = (new Date(y, m-1, 1).getDay()+6)%7;
+  const prodOpts = PRODUCTS.map(p=>`<option value="${p.id}" ${p.id===calPid?"selected":""}>${p.name}</option>`).join("");
+  const ccOpts = Object.entries(COUNTRIES).map(([cc,c])=>`<option value="${cc}" ${cc===calCc?"selected":""}>${c.flag} ${c.name}</option>`).join("");
+  let cells = "";
+  ["一","二","三","四","五","六","日"].forEach(w => cells += `<div class="calhead">周${w}</div>`);
+  for (let i=0;i<startWeekday;i++) cells += `<div class="calcell empty"></div>`;
+  for (let d=1; d<=daysInMonth; d++){
+    const ds = `${calMonth}-${String(d).padStart(2,"0")}`;
+    const t = targetFor(calPid, calCc, ds);
+    cells += `<div class="calcell ${ds===todayStr()?"today":""}" onclick="editCell(event,'${ds}')" id="cell-${ds}">
+      <div class="d">${d}${ds===todayStr()?" · 今天":""}</div>
+      <div class="t ${t==null?"unset":""}">${t==null?"+":fmt(t)}</div></div>`;
+  }
+  return `<h2>📅 价格日历｜每日目标价 <small>点日期格输入（清空=删除）；国家页按「今天」自动比对；趋势图显示目标价虚线</small></h2>
+  <div class="calctrl">
+    <select onchange="calPid=this.value;renderViews()">${prodOpts}</select>
+    <select onchange="calCc=this.value;renderViews()">${ccOpts}</select>
+    <button class="btn" onclick="calNav(-1)">← 上月</button>
+    <b style="min-width:92px;text-align:center">${calMonth}</b>
+    <button class="btn" onclick="calNav(1)">下月 →</button>
+  </div>
+  <div class="calctrl" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px">
+    <b style="font-size:13px">批量填充：</b>
+    <input type="date" id="bulkFrom" value="${calMonth}-01">
+    <span style="color:var(--sub)">至</span>
+    <input type="date" id="bulkTo" value="${calMonth}-${String(daysInMonth).padStart(2,"0")}">
+    <input type="number" id="bulkPrice" placeholder="目标价 €" step="0.01">
+    <label style="font-size:13px;color:var(--sub)"><input type="checkbox" id="bulkAllCc"> 同时应用到三国</label>
+    <button class="btn primary" onclick="bulkFill(false)">填充</button>
+    <button class="btn danger" onclick="bulkFill(true)">清除区间</button>
+  </div>
+  <div class="calgrid">${cells}</div>
+  <div class="note">💡 大促（Prime Day / 黑五）前把促销档期目标价批量填入；每天看各国家 Tab 的「vs 今日目标价」列 —— 红色 = 有渠道破价或未跟价。</div>`;
+}
+function calNav(dir){
+  const [y,m] = calMonth.split("-").map(Number);
+  const d = new Date(y, m-1+dir, 1);
+  calMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  renderViews();
+}
+function editCell(ev, ds){
+  const cell = document.getElementById("cell-"+ds);
+  if (!cell || cell.querySelector("input")) return;
+  const cur = targetFor(calPid, calCc, ds);
+  cell.innerHTML += `<input type="number" step="0.01" value="${cur==null?"":cur}" placeholder="€"
+    onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter')this.blur()"
+    onblur="saveCell('${ds}', this.value)">`;
+  cell.querySelector("input").focus();
+}
+function saveCell(ds, val){
+  const n = parseFloat((val||"").replace(",","."));
+  const k = calPid+"|"+calCc+"|"+ds;
+  if (val === "" || isNaN(n)) delete state.targets[k]; else state.targets[k] = n;
+  save(); renderViews();
+}
+function bulkFill(clear){
+  const from = document.getElementById("bulkFrom").value, to = document.getElementById("bulkTo").value;
+  const price = parseFloat(document.getElementById("bulkPrice").value);
+  const allCc = document.getElementById("bulkAllCc").checked;
+  if (!from || !to || (!clear && isNaN(price))) { alert("请填写日期区间和目标价"); return; }
+  const ccs = allCc ? Object.keys(COUNTRIES) : [calCc];
+  for (let d = new Date(from+"T12:00"); d <= new Date(to+"T12:00"); d.setDate(d.getDate()+1)){
+    const ds = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    ccs.forEach(cc => {
+      const k = calPid+"|"+cc+"|"+ds;
+      if (clear) delete state.targets[k]; else state.targets[k] = price;
+    });
+  }
+  save(); renderViews();
+}
+
+/* ════════════════ 编辑 / 导入导出 ════════════════ */
+function bindEditables(){
+  document.querySelectorAll(".editable").forEach(el => {
+    el.addEventListener("blur", () => {
+      const v = parseFloat(el.textContent.replace(",",".").replace(/[^\d.]/g,""));
+      if (isNaN(v)) { renderViews(); return; }
+      const cur = curPrice(el.dataset.pid, el.dataset.cc, el.dataset.ch);
+      if (v !== cur) recordManual(el.dataset.pid+"|"+el.dataset.cc+"|"+el.dataset.ch, v);
+    });
+  });
+}
+function exportAll(){
+  const blob = new Blob([JSON.stringify({exported:new Date().toISOString(),
+    targets:state.targets, manualHistory:state.manualHistory, idealoShops:state.idealoShops,
+    fullHistory:histAll()}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `aiper-gtm-data-${todayStr()}.json`;
+  a.click();
+}
+function importAll(input){
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (d.targets) state.targets = d.targets;
+      if (d.manualHistory) state.manualHistory = d.manualHistory;
+      if (d.idealoShops) state.idealoShops = d.idealoShops;
+      save(); renderViews(); alert("导入成功");
+    } catch(e){ alert("导入失败：" + e.message); }
+  };
+  r.readAsText(f);
+  input.value = "";
+}
+function resetLocal(){
+  if (confirm("清除所有本地修改（目标价、手动改价、Idealo 商家标注）？自动抓取的历史不受影响。")){
+    localStorage.removeItem(LS_KEY);
+    state = {targets:{}, manualHistory:[], idealoShops:{}, hiddenSeries:{}};
+    renderViews();
+  }
+}
+
+/* ════════════════ 启动 ════════════════ */
+const _h = histAll();
+document.getElementById("lastRecord").textContent = _h.length ? _h[_h.length-1].ts : "—";
+document.getElementById("todayLabel").textContent = todayStr();
+renderTabs(); renderViews();
+</script>
+</body>
+</html>
