@@ -134,9 +134,9 @@
   </div>
 </header>
 <div class="meta">
-  最近记录：<b id="lastRecord">—</b> ｜ 自动抓取：<b>每小时一次</b>（aiper.store、Amazon×3、eRobot、Boulanger、Irripiscine、pool-systems）
+  最近记录：<b id="lastRecord">—</b> ｜ 自动抓取：<b>每小时一次</b>（aiper.store、Amazon×3、eRobot、Boulanger、Irripiscine、pool-systems、Hornbach、MyPiscine、Leroy Merlin — 后三者经 Apify 浏览器代理绕过反爬）
   ｜ 今天：<b id="todayLabel"></b>
-  ｜ <span style="color:var(--warn)">Idealo / Hornbach / Cdiscount / MyPiscine / Leroy Merlin 有反爬 → 数据为快照价，点链接复核后可在表内改价</span>
+  ｜ <span style="color:var(--warn)">Idealo / Cdiscount 反爬更强，Apify 也未能绕过 → 仍为人工核价，点链接复核后可在表内改价</span>
 </div>
 
 <div class="tabs" id="tabs"></div>
@@ -155,7 +155,7 @@
   <ol>
     <li><b>小时级记录</b>：本机每小时自动抓一次可访问渠道的价格（写入 <code>aiper-gtm-feed.js</code>）。趋势图切到「24小时」即可看到渠道的小时内变价；「🔔 价格变动」区自动列出最近 48 小时内发生的所有变价。</li>
     <li><b>常驻开机生效</b>：双击 <code>~/aiper-gtm/启用每小时自动记录.command</code> 一次即可（电脑关机/睡眠期间不记录）。</li>
-    <li><b>反爬渠道</b>（Idealo/Hornbach/Cdiscount/MyPiscine/LeroyMerlin.es）：点行内「复核」看实时价，点价格单元格直接改，修改会自动记入当前小时的历史。</li>
+    <li><b>反爬渠道</b>：Hornbach/MyPiscine/Leroy Merlin 已接入 Apify 云端浏览器代理，每小时自动抓取；Idealo/Cdiscount 反爬更强，仍需人工——点行内「复核」看实时价，点价格单元格直接改，修改会自动记入当前小时的历史。</li>
     <li><b>Idealo 最低价商家</b>：Idealo 行下方标注最低价来源商家，点 ✎ 可编辑（点开 Idealo 页面即可看到商家排序）。</li>
     <li><b>价格日历</b>：为每产品×国家设每日目标价，国家页自动比对：达标 / 高于 / 低于⚠。</li>
     <li><b>备份</b>：目标价与手动修改存在浏览器本地；换设备前「导出 JSON」→ 新设备「导入」。</li>
@@ -166,6 +166,7 @@
 
 <script src="aiper-gtm-feed.js"></script>
 <script src="aiper-gtm-feed-local.js"></script>
+<script src="aiper-gtm-feed-apify.js"></script>
 <script src="aiper-gtm-feed-manual.js"></script>
 <script>
 /* ════════════════ 内置基础数据（渠道定义 + 首日快照） ════════════════ */
@@ -178,13 +179,13 @@ const CH_META = {
   amazon:{label:"Amazon 官方店", color:"var(--amazon)", auto:true},
   idealo:{label:"Idealo 最低价", color:"var(--idealo)", auto:false},
   poolsystems:{label:"pool-systems.de", color:"var(--poolsystems)", auto:true},
-  hornbach:{label:"Hornbach", color:"var(--hornbach)", auto:false},
+  hornbach:{label:"Hornbach", color:"var(--hornbach)", auto:true},
   erobot:{label:"eRobot Piscine", color:"var(--erobot)", auto:true},
-  mypiscine:{label:"MyPiscine", color:"var(--mypiscine)", auto:false},
+  mypiscine:{label:"MyPiscine", color:"var(--mypiscine)", auto:true},
   cdiscount:{label:"Cdiscount", color:"var(--cdiscount)", auto:false},
   boulanger:{label:"Boulanger", color:"var(--boulanger)", auto:true},
   irripiscine:{label:"Irripiscine", color:"var(--irripiscine)", auto:true},
-  leroymerlin:{label:"Leroy Merlin", color:"var(--leroymerlin)", auto:false}
+  leroymerlin:{label:"Leroy Merlin", color:"var(--leroymerlin)", auto:true}
 };
 
 const PRODUCTS = [
@@ -197,14 +198,14 @@ const PRODUCTS = [
         {key:"amazon", price:521, strike:699, url:"https://www.amazon.de/dp/B0DL46SD6W", official:true},
         {key:"idealo", price:499, url:"https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=aiper%20scuba%20s1", note:"快照", shopsDefault:"待复核（点链接看商家）"},
         {key:"poolsystems", price:494, url:"https://www.pool-systems.de/Poolroboter/Aiper-Scuba-S1.html"},
-        {key:"hornbach", price:549, url:"https://www.hornbach.de/p/aiper-scuba-s1-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/", note:"快照"}
+        {key:"hornbach", price:494, url:"https://www.hornbach.de/p/aiper-scuba-s1-2025-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/"}
       ],
       fr:[
         {key:"aiper", price:521, url:"https://aiper.store/fr/products/scuba-s1-nettoyeur-de-piscine-robotis%C3%A9-sans-fil", official:true},
         {key:"amazon", price:599, url:"https://www.amazon.fr/dp/B0CPSQBFNG", official:true},
         {key:"idealo", price:494, url:"https://www.idealo.fr/prix/203961543/aiper-scuba-s1.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
         {key:"erobot", price:599, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-sans-fil-aiper-scuba-s1"},
-        {key:"mypiscine", price:549, strike:599, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html", note:"快照"},
+        {key:"mypiscine", price:549, strike:599, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html"},
         {key:"cdiscount", price:569.99, url:"https://www.cdiscount.com/jardin/r-robot+piscine+aiper+s1.html", note:"快照"},
         {key:"boulanger", price:599.99, url:"https://www.boulanger.com/ref/1220192"},
         {key:"irripiscine", price:599, url:"https://www.irripiscine.fr/produit/robot-de-piscine-aiper-scuba-s1-sans-fil"}
@@ -213,7 +214,7 @@ const PRODUCTS = [
         {key:"aiper", price:521, url:"https://aiper.store/es/products/aiper-scuba-s1-limpiador-de-piscina-rob%C3%B3tico-sin-cables", official:true},
         {key:"amazon", price:521, url:"https://www.amazon.es/dp/B0FD9K27GT", official:true},
         {key:"idealo", price:499, url:"https://www.idealo.es/precios/206184168/aiper-scuba-s1-2025.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
-        {key:"leroymerlin", price:499, strike:599, url:"https://www.leroymerlin.es/productos/robot-limpiafondos-aiper-scuba-s1-2026-para-fondo-y-pared-con-autonomia-de-180-min-93837415.html", note:"促销至 07-20，快照"}
+        {key:"leroymerlin", price:499, strike:599, url:"https://www.leroymerlin.es/productos/robot-limpiafondos-aiper-scuba-s1-2026-para-fondo-y-pared-con-autonomia-de-180-min-93837415.html", note:"促销至 07-20"}
       ]
     }
   },
@@ -225,14 +226,14 @@ const PRODUCTS = [
         {key:"aiper", price:849, url:"https://aiper.store/de/products/aiper-scuba-v3", official:true},
         {key:"amazon", price:899, strike:1299, url:"https://www.amazon.de/dp/B0GFW5VBDQ", official:true},
         {key:"idealo", price:899, url:"https://www.idealo.de/preisvergleich/OffersOfProduct/210287510_-scuba-v3-aiper.html", note:"快照", shopsDefault:"待复核（点链接看商家）"},
-        {key:"hornbach", price:999, url:"https://www.hornbach.de/c/garten/pools/poolpflege-poolreinigung/poolroboter/S21652/f/Marke=Aiper", note:"快照"}
+        {key:"hornbach", price:999, url:"https://www.hornbach.de/p/aiper-scuba-v3-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-und-waenden-18-000-l-h-durchflussrate-180-minuten-akkulaufzeit/12695324/"}
       ],
       fr:[
         {key:"aiper", price:849, url:"https://aiper.store/fr/products/aiper-scuba-v3", official:true},
         {key:"amazon", price:899, url:"https://www.amazon.fr/dp/B0GFW5VBDQ", official:true},
         {key:"idealo", price:805, url:"https://www.idealo.fr/prix/210287510/aiper-scuba-v3.html", note:"⚠低于官网", shopsDefault:"疑似 MyPiscine（€809 快照）— 点链接确认"},
         {key:"erobot", price:999, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-piscine-sans-fil-aiper-scuba-v3"},
-        {key:"mypiscine", price:809, strike:999, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html", note:"⚠低于官网，快照"},
+        {key:"mypiscine", price:809, strike:999, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html", note:"⚠低于官网"},
         {key:"cdiscount", price:null, url:"https://www.cdiscount.com/search/10/aiper+scuba+v3.html", note:"待复核"},
         {key:"boulanger", price:1447.85, url:"https://www.boulanger.com/ref/1235250", note:"⚠明显未跟价"},
         {key:"irripiscine", price:899, url:"https://www.irripiscine.fr/produit/robot-piscine-sans-fil-aiper-scuba-v3"}
@@ -322,9 +323,10 @@ function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function histAll(){
   const feed = Array.isArray(window.GTM_FEED) ? window.GTM_FEED : [];            // 云端 Actions：官网/eRobot/Irripiscine/pool-systems
   const feedLocal = Array.isArray(window.GTM_FEED_LOCAL) ? window.GTM_FEED_LOCAL : []; // 本地 Mac：Amazon/Boulanger（机房 IP 被拦）
-  const feedManual = Array.isArray(window.GTM_FEED_MANUAL) ? window.GTM_FEED_MANUAL : []; // 人工核价（反爬渠道，仓库维护）
+  const feedApify = Array.isArray(window.GTM_FEED_APIFY) ? window.GTM_FEED_APIFY : []; // 云端 Actions + Apify 浏览器代理：Hornbach/MyPiscine/LeroyMerlin
+  const feedManual = Array.isArray(window.GTM_FEED_MANUAL) ? window.GTM_FEED_MANUAL : []; // 人工核价（Idealo/Cdiscount 等仍无法自动化的渠道）
   const byTs = {};
-  [...SEED_HISTORY, ...feed, ...feedLocal, ...feedManual, ...(state.manualHistory||[])].forEach(h => {
+  [...SEED_HISTORY, ...feed, ...feedLocal, ...feedApify, ...feedManual, ...(state.manualHistory||[])].forEach(h => {
     byTs[h.ts] = Object.assign(byTs[h.ts]||{}, h.prices);
   });
   return Object.keys(byTs).sort().map(ts => ({ts, prices:byTs[ts]}));

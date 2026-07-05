@@ -19,16 +19,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Run price scraper (cloud targets)
+      - name: Run price scraper (cloud targets — aiper.store / eRobot / Irripiscine / pool-systems)
         env:
           GTM_MODE: cloud
         run: python3 refresh.py
 
-      - name: Commit updated feed
+      - name: Run price scraper (Apify-rendered targets — Hornbach / MyPiscine / Leroy Merlin)
+        env:
+          GTM_MODE: apify
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: python3 refresh.py
+        continue-on-error: true   # Apify 免费额度耗尽或超时不应阻断其余渠道的记录
+
+      - name: Commit updated feeds
         run: |
           git config user.name "gtm-price-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add aiper-gtm-feed.js
+          git add aiper-gtm-feed.js aiper-gtm-feed-apify.js
           if git diff --cached --quiet; then
             echo "No feed changes to commit"
           else
