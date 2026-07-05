@@ -135,14 +135,15 @@ TARGETS = [
 ]
 
 # 需要 Apify 浏览器渲染才能绕过反爬的渠道（普通 curl 会拿到验证页 / 403 / 503-无内容）
+# 实测（2026-07-05）：Hornbach / MyPiscine 用 Apify 默认代理即可绕过；
+# Idealo（503）/ Leroy Merlin（403，重试 4 次仍被拦）防护更强，Apify 免费代理过不去，继续人工核价。
 APIFY_TARGETS = [
     ("s1|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-s1-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/"),
     ("v3|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-v3-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-und-waenden-18-000-l-h-durchflussrate-180-minuten-akkulaufzeit/12695324/"),
     ("s1|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html"),
     ("v3|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html"),
-    ("s1|es|leroymerlin", "https://www.leroymerlin.es/productos/robot-limpiafondos-aiper-scuba-s1-2026-para-fondo-y-pared-con-autonomia-de-180-min-93837415.html"),
 ]
-# Idealo/Cdiscount：Idealo 用 Apify 也返回 503（更强的边缘防护），Cdiscount 无确认的单品直链——继续人工核价（aiper-gtm-feed-manual.js）
+# Idealo/Cdiscount/LeroyMerlin：继续人工核价（aiper-gtm-feed-manual.js，refresh.py 不碰这个文件）
 
 CLOUD_BLOCKED = ("amazon", "boulanger")   # 机房 IP 抓不到，划给 local 模式
 def my_targets():
