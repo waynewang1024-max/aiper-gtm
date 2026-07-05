@@ -94,6 +94,32 @@ def p_meta(t):        # PrestaShop og product:price:amount（含税）
         re.search(r'content="([\d.]+)"\s+property="product:price:amount"', t)
     return float(m.group(1)) if m else None
 
+def money_to_float(s):
+    s = s.replace(" ", "")
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    elif "," in s:
+        s = s.replace(",", ".")
+    return float(s)
+
+def p_price_text(t, labels=()):
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))
+    patterns = [rf"([0-9]{{1,4}}(?:[ .][0-9]{{3}})*[,.][0-9]{{2}})\s*€\s*{label}" for label in labels]
+    patterns += [r"([0-9]{1,4}(?:[ .][0-9]{3})*[,.][0-9]{2})\s*€"]
+    for pattern in patterns:
+        m = re.search(pattern, text, re.I)
+        if m:
+            return money_to_float(m.group(1))
+    return None
+
+def p_mypiscine(t):
+    # MyPiscine 的 JSON-LD 曾返回法国不含税价（HT），例如 549 TTC 被抓成 457.50。
+    return p_price_text(t, ("TTC",)) or p_meta(t) or p_jsonld(t)
+
+def p_boulanger(t):
+    # Boulanger 页面可能混入 marketplace/旧价字段，先尽量读可见主价，再交给防呆过滤。
+    return p_price_text(t, ("TTC",)) or p_jsonld(t)
+
 def p_generic(t):     # Apify 渲染后的通用兜底：JSON-LD → meta → 正文里的 "NN,NN €" / "NN.NN €"
     v = p_jsonld(t)
     if v: return v
@@ -128,8 +154,8 @@ TARGETS = [
     # 法国其他零售商（可自动抓取的）
     ("s1|fr|erobot",      "https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-sans-fil-aiper-scuba-s1", p_meta, "fr-FR"),
     ("v3|fr|erobot",      "https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-piscine-sans-fil-aiper-scuba-v3", p_meta, "fr-FR"),
-    ("s1|fr|boulanger",   "https://www.boulanger.com/ref/1220192", p_jsonld, "fr-FR,fr;q=0.9"),      # cloud 机房 IP 超时，划入 local
-    ("v3|fr|boulanger",   "https://www.boulanger.com/ref/1235250", p_jsonld, "fr-FR,fr;q=0.9"),
+    ("s1|fr|boulanger",   "https://www.boulanger.com/ref/1220192", p_boulanger, "fr-FR,fr;q=0.9"),      # cloud 机房 IP 超时，划入 local
+    ("v3|fr|boulanger",   "https://www.boulanger.com/ref/1235250", p_boulanger, "fr-FR,fr;q=0.9"),
     ("s1|fr|irripiscine", "https://www.irripiscine.fr/produit/robot-de-piscine-aiper-scuba-s1-sans-fil", p_jsonld, "fr-FR"),
     ("v3|fr|irripiscine", "https://www.irripiscine.fr/produit/robot-piscine-sans-fil-aiper-scuba-v3", p_jsonld, "fr-FR"),
 ]
@@ -138,12 +164,24 @@ TARGETS = [
 # 实测（2026-07-05）：Hornbach / MyPiscine 用 Apify 默认代理即可绕过；
 # Idealo（503）/ Leroy Merlin（403，重试 4 次仍被拦）防护更强，Apify 免费代理过不去，继续人工核价。
 APIFY_TARGETS = [
-    ("s1|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-s1-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/"),
-    ("v3|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-v3-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-und-waenden-18-000-l-h-durchflussrate-180-minuten-akkulaufzeit/12695324/"),
-    ("s1|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html"),
-    ("v3|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html"),
+    ("s1|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-s1-2026-upgrade-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-waenden-und-wasserlinie-15-900-l-h-durchflussrate-180-minuten-akkulaufzeit/12407504/", p_generic),
+    ("v3|de|hornbach", "https://www.hornbach.de/p/aiper-scuba-v3-poolroboter-fuer-pools-bis-zu-150-m-kabellose-reinigung-von-boden-und-waenden-18-000-l-h-durchflussrate-180-minuten-akkulaufzeit/12695324/", p_generic),
+    ("s1|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html", p_mypiscine),
+    ("v3|fr|mypiscine", "https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html", p_mypiscine),
 ]
 # Idealo/Cdiscount/LeroyMerlin：继续人工核价（aiper-gtm-feed-manual.js，refresh.py 不碰这个文件）
+
+MAX_PRICE_BY_PID = {"s1": 599, "v3": 999}
+
+def validate_price(key, price):
+    pid = key.split("|", 1)[0]
+    max_price = MAX_PRICE_BY_PID.get(pid)
+    if max_price is not None and price > max_price:
+        return False, f"above max guard {price:g} > {max_price:g}"
+    return True, ""
+
+def scrub_prices(prices):
+    return {k: v for k, v in prices.items() if validate_price(k, v)[0]}
 
 CLOUD_BLOCKED = ("amazon", "boulanger")   # 机房 IP 抓不到，划给 local 模式
 def my_targets():
@@ -169,6 +207,8 @@ def main():
         try:
             v = parser(fetch(url, lang))
             if v is None: errors.append(f"{key}: no price matched"); continue
+            ok, reason = validate_price(key, v)
+            if not ok: errors.append(f"{key}: rejected ({reason})"); continue
             prices[key] = v
         except Exception as e:
             errors.append(f"{key}: {e}")
@@ -177,16 +217,20 @@ def main():
         if not APIFY_TOKEN:
             errors.append("APIFY_TOKEN not set — skipping apify targets")
         else:
-            for key, url in APIFY_TARGETS:
+            for key, url, parser in APIFY_TARGETS:
                 try:
                     html = apify_fetch(url)
-                    v = p_generic(html)
+                    v = parser(html)
                     if v is None: errors.append(f"{key}: no price matched (apify)"); continue
+                    ok, reason = validate_price(key, v)
+                    if not ok: errors.append(f"{key}: rejected ({reason})"); continue
                     prices[key] = v
                 except Exception as e:
                     errors.append(f"{key}: {e}")
 
     feed = [e for e in load_feed() if e.get("ts") != ts]      # 同一小时重跑则覆盖
+    feed = [{**e, "prices": scrub_prices(e.get("prices", {}))} for e in feed]
+    feed = [e for e in feed if e["prices"]]
     if prices: feed.append({"ts": ts, "prices": prices})
     cutoff = (now - timedelta(days=90)).strftime("%Y-%m-%d %H:00")
     feed = sorted([e for e in feed if e["ts"] >= cutoff], key=lambda e: e["ts"])

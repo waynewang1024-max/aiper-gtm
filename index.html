@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<meta name="description" content="Aiper EU GTM price monitor for Germany, France and Spain with hourly channel tracking, targets and competitor benchmarking.">
 <title>Aiper EU GTM · Price Monitor | Wayne Wang</title>
 <style>
   :root{
@@ -24,6 +26,9 @@
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
     padding:30px 4vw 90px;line-height:1.6;min-height:100vh;position:relative
   }
+  button,input,select{font:inherit}
+  button{appearance:none}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   body::after{ /* WW 水印 */
     content:"W&#8202;W";position:fixed;right:-8px;bottom:-56px;font-size:230px;font-weight:800;
     font-family:Georgia,"Times New Roman",serif;letter-spacing:-18px;
@@ -46,9 +51,9 @@
   h3 small{color:var(--sub);font-weight:400;font-size:12.5px}
   .meta{color:var(--sub);font-size:13px;margin:10px 0 4px;position:relative;z-index:1}
   .meta b{color:var(--txt)}
-  .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:11px 15px;font-size:13px;color:var(--sub);margin:12px 0;position:relative;z-index:1}
+  .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:11px 15px;font-size:13px;color:var(--sub);margin:12px 0;position:relative;z-index:1}
   .note b{color:var(--txt)} .note.warn{border-left-color:var(--warn)}
-  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px;margin-bottom:10px;position:relative;z-index:1}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:13.5px;margin-bottom:10px;position:relative;z-index:1}
   th{background:var(--card2);text-align:left;padding:9px 13px;font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
   td{padding:9px 13px;border-top:1px solid var(--line);vertical-align:middle}
   tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
@@ -57,7 +62,7 @@
   .strike{color:var(--sub);text-decoration:line-through;font-size:12px;margin-left:5px;font-weight:400}
   .diff-warn{color:var(--warn);font-weight:600}.diff-bad{color:var(--bad);font-weight:600}.diff-zero{color:var(--sub)}
   a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  .chip{display:inline-block;font-size:10.5px;border-radius:20px;padding:1.5px 9px;margin-left:6px;vertical-align:1px;border:1px solid}
+  .chip{display:inline-block;font-size:10.5px;border-radius:999px;padding:1.5px 9px;margin-left:6px;vertical-align:1px;border:1px solid;white-space:nowrap}
   .chip.official{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.3)}
   .chip.tp{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.3)}
   .chip.na{background:rgba(251,113,133,.1);color:var(--bad);border-color:rgba(251,113,133,.28)}
@@ -68,22 +73,23 @@
   .chip.auto{background:rgba(94,177,255,.1);color:var(--accent);border-color:rgba(94,177,255,.3)}
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 6px;position:sticky;top:0;z-index:20;
     background:linear-gradient(180deg,var(--bg0) 82%,transparent);padding:10px 0 12px}
-  .tab{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:24px;padding:8px 19px;font-size:13.5px;cursor:pointer;font-weight:600;backdrop-filter:blur(8px)}
+  .tab{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:999px;padding:8px 19px;font-size:13.5px;cursor:pointer;font-weight:600;backdrop-filter:blur(8px)}
   .tab:hover{border-color:var(--line2);color:var(--txt)}
+  .tab:focus-visible,.btn:focus-visible,.rangebtns button:focus-visible,.legend button:focus-visible,.calcell:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
   .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#08101f;border-color:transparent;box-shadow:0 4px 16px rgba(94,177,255,.3)}
   .view{display:none;position:relative;z-index:1}.view.active{display:block}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:13px;margin:12px 0;position:relative;z-index:1}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 2px 14px rgba(0,0,0,.18)}
   .card h4{font-size:14px;margin-bottom:6px} .card p{font-size:12.5px;color:var(--sub)}
   .kpi{font-size:21px;font-weight:700;margin:3px 0}
-  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin:10px 0 20px;box-shadow:0 2px 14px rgba(0,0,0,.18);position:relative;z-index:1}
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:15px;margin:10px 0 20px;box-shadow:0 2px 14px rgba(0,0,0,.18);position:relative;z-index:1}
   .chartbox .legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;margin:6px 0 8px}
-  .legend span{cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px;color:var(--sub)}
+  .legend button{background:transparent;border:0;cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px;color:var(--sub);padding:2px 0}
   .legend .dot{width:9px;height:9px;border-radius:3px;display:inline-block}
   .legend .off{opacity:.3;text-decoration:line-through}
   svg text{fill:var(--sub);font-size:10px}
   .rangebtns{display:inline-flex;gap:6px;margin-left:10px;vertical-align:middle}
-  .rangebtns button{background:var(--card2);border:1px solid var(--line);color:var(--sub);border-radius:16px;padding:2px 12px;font-size:12px;cursor:pointer}
+  .rangebtns button{background:var(--card2);border:1px solid var(--line);color:var(--sub);border-radius:999px;padding:2px 12px;font-size:12px;cursor:pointer}
   .rangebtns button.active{color:#08101f;background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;font-weight:600}
   .keepa img{width:100%;max-width:840px;border-radius:10px;background:#fff;display:block;margin-top:8px}
   .calctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0;position:relative;z-index:1}
@@ -95,7 +101,7 @@
   .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
   .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;max-width:960px;margin-top:12px;position:relative;z-index:1}
   .calhead{text-align:center;font-size:11.5px;color:var(--sub);padding:4px 0;letter-spacing:.06em}
-  .calcell{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:66px;padding:7px 9px;cursor:pointer;position:relative}
+  .calcell{background:var(--card);border:1px solid var(--line);border-radius:8px;min-height:66px;padding:7px 9px;cursor:pointer;position:relative;text-align:left;color:var(--txt)}
   .calcell:hover{border-color:var(--accent)}
   .calcell.empty{background:transparent;border:none;cursor:default}
   .calcell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 14px rgba(94,177,255,.25)}
@@ -108,19 +114,33 @@
   .track{position:relative;flex:1;height:22px;background:var(--card2);border-radius:8px;overflow:hidden}
   .band{position:absolute;top:3px;bottom:3px;border-radius:6px;opacity:.9;display:flex;align-items:center;justify-content:center;font-size:11px;color:#08101f;font-weight:700;white-space:nowrap;min-width:56px}
   .axis{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-left:232px;margin-top:2px}
-  .changes{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0;position:relative;z-index:1}
+  .changes{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin:12px 0;position:relative;z-index:1}
   .changes .item{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
   .changes .item:last-child{border-bottom:none}
   .changes .ts{color:var(--sub);font-size:11.5px;margin-right:8px;font-variant-numeric:tabular-nums}
   .shops{font-size:11.5px;color:var(--sub);margin-top:3px}
-  .shops .edit{cursor:pointer;color:var(--accent)}
-  .howto{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:36px;font-size:13px;color:var(--sub);position:relative;z-index:1}
+  .shops .edit{cursor:pointer;color:var(--accent);background:transparent;border:0;padding:0 2px}
+  .inline-action{background:transparent;border:0;color:var(--accent);cursor:pointer;font-size:12px;padding:0 2px}
+  .inline-action:hover,.shops .edit:hover{text-decoration:underline}
+  .howto{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:36px;font-size:13px;color:var(--sub);position:relative;z-index:1}
   .howto h3{margin-top:0} .howto ol{margin-left:18px} .howto li{margin:5px 0}
   code{background:var(--card2);border-radius:5px;padding:1px 6px;font-size:12px}
   .editable{border-bottom:1px dashed var(--sub);cursor:text}
   .toolbar{margin:24px 0 6px;position:relative;z-index:1} .toolbar .btn{margin-right:8px}
   footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:1}
   footer b{color:var(--accent2)}
+  @media (max-width: 760px){
+    body{padding:18px 14px 70px}
+    header{align-items:flex-start}.wwlogo{width:44px;height:44px;border-radius:10px;font-size:20px}
+    h1{font-size:20px}.byline{letter-spacing:.06em}.meta{font-size:12.5px}
+    .tabs{top:0;gap:6px;overflow-x:auto;flex-wrap:nowrap;margin-left:-14px;margin-right:-14px;padding:10px 14px 12px}
+    .tab{flex:0 0 auto;padding:7px 13px}
+    table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+    th,td{padding:8px 10px}
+    .rangerow{display:block}.rangerow .lbl{width:auto;text-align:left;margin-bottom:4px}.axis{margin-left:0}
+    .calgrid{gap:5px}.calcell{min-height:58px;padding:6px}.calcell .t{font-size:12.5px}
+    .toolbar .btn{margin:0 6px 8px 0}
+  }
   @media print{body{background:#fff;color:#111}body::after{display:none}.tabs{display:none}.view{display:block!important}}
 </style>
 </head>
@@ -143,11 +163,11 @@
 <div id="views"></div>
 
 <div class="toolbar">
-  <button class="btn primary" onclick="exportAll()">📥 导出全部数据 JSON</button>
-  <button class="btn" onclick="document.getElementById('importFile').click()">📤 导入 JSON</button>
+  <button class="btn primary" id="exportBtn" type="button">导出全部数据 JSON</button>
+  <button class="btn" id="importBtn" type="button">导入 JSON</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importAll(this)">
-  <button class="btn" onclick="window.print()">🖨 打印 / 存 PDF</button>
-  <button class="btn danger" onclick="resetLocal()">♻️ 清除本地修改</button>
+  <button class="btn" id="printBtn" type="button">打印 / 存 PDF</button>
+  <button class="btn danger" id="resetBtn" type="button">清除本地修改</button>
 </div>
 
 <div class="howto">
@@ -207,7 +227,7 @@ const PRODUCTS = [
         {key:"erobot", price:599, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-sans-fil-aiper-scuba-s1"},
         {key:"mypiscine", price:549, strike:599, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26107-robot-piscine-sans-fil-aiper-scuba-s1-2025-6977676340140.html"},
         {key:"cdiscount", price:569.99, url:"https://www.cdiscount.com/jardin/r-robot+piscine+aiper+s1.html", note:"快照"},
-        {key:"boulanger", price:599.99, url:"https://www.boulanger.com/ref/1220192"},
+        {key:"boulanger", price:null, url:"https://www.boulanger.com/ref/1220192", note:"待复核（超过 S1 最高价防呆线 €599 时不自动记录）"},
         {key:"irripiscine", price:599, url:"https://www.irripiscine.fr/produit/robot-de-piscine-aiper-scuba-s1-sans-fil"}
       ],
       es:[
@@ -235,7 +255,7 @@ const PRODUCTS = [
         {key:"erobot", price:999, url:"https://www.erobot-piscine.fr/robot/robot-piscine-sans-fil-/robot-piscine-sans-fil-aiper-scuba-v3"},
         {key:"mypiscine", price:809, strike:999, url:"https://www.mypiscine.com/robot-piscine-sans-fil/26313-robot-piscine-sans-fil-aiper-scuba-v3-6977676345015.html", note:"⚠低于官网"},
         {key:"cdiscount", price:null, url:"https://www.cdiscount.com/search/10/aiper+scuba+v3.html", note:"待复核"},
-        {key:"boulanger", price:1447.85, url:"https://www.boulanger.com/ref/1235250", note:"⚠明显未跟价"},
+        {key:"boulanger", price:null, url:"https://www.boulanger.com/ref/1235250", note:"待复核（超过 V3 最高价防呆线 €999 时不自动记录）"},
         {key:"irripiscine", price:899, url:"https://www.irripiscine.fr/produit/robot-piscine-sans-fil-aiper-scuba-v3"}
       ],
       es:[
@@ -350,6 +370,15 @@ const fmt = n => n==null ? "—" : "€"+Number(n).toLocaleString("de-DE",{minim
 const todayStr = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 const nowHourTs = () => todayStr()+" "+String(new Date().getHours()).padStart(2,"0")+":00";
 const tsToMs = ts => new Date(ts.replace(" ","T")).getTime();
+const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+const parsePrice = value => {
+  const normalized = String(value ?? "").replace(",", ".").replace(/[^\d.]/g, "");
+  const firstDot = normalized.indexOf(".");
+  const cleaned = firstDot === -1 ? normalized : normalized.slice(0, firstDot + 1) + normalized.slice(firstDot + 1).replace(/\./g, "");
+  const n = Number.parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+};
+const linkTo = (url, label, cls = "") => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer"${cls ? ` class="${cls}"` : ""}>${label}</a>`;
 
 /* ════════════════ 价格变动检测 ════════════════ */
 function recentChanges(hours, ccFilter){
@@ -396,7 +425,7 @@ let activeTab = location.hash.replace("#","") || "overview";
 if (!TABS.some(t=>t.id===activeTab)) activeTab = "overview";
 function renderTabs(){
   document.getElementById("tabs").innerHTML = TABS.map(t =>
-    `<div class="tab ${t.id===activeTab?"active":""}" onclick="switchTab('${t.id}')">${t.label}</div>`).join("");
+    `<button class="tab ${t.id===activeTab?"active":""}" type="button" aria-selected="${t.id===activeTab}" onclick="switchTab('${t.id}')">${t.label}</button>`).join("");
 }
 function switchTab(id){ activeTab = id; location.hash = id; renderTabs(); renderViews(); }
 function renderViews(){
@@ -448,11 +477,11 @@ function viewOverview(){
   html += `<h2>任务 2｜竞品价格区间 <small>Beatbot · Wybot · Zodiac（官网 D2C 为欧元区统一价）</small></h2>
   <div class="rangewrap">` + brandBands() + `</div>`;
   COMPETITORS.forEach(c => {
-    html += `<h3 style="color:${c.color}">${c.brand} <small>｜${c.channelNote} ｜ <a href="${c.storeUrl}" target="_blank">渠道入口 ↗</a></small></h3>
+    html += `<h3 style="color:${c.color}">${esc(c.brand)} <small>｜${esc(c.channelNote)} ｜ ${linkTo(c.storeUrl, "渠道入口 ↗")}</small></h3>
     <table><thead><tr><th style="width:30%">机型</th><th>官网现售价</th><th>官网 MSRP</th><th>Amazon 参考价</th></tr></thead><tbody>`;
     c.models.forEach(m => {
-      html += `<tr><td>${m.m}</td><td class="price">${m.official!=null?fmt(m.official)+(m.range2?" – "+fmt(m.range2):""):"（无 D2C）"}</td>
-      <td class="price" style="color:var(--sub)">${m.msrp!=null?fmt(m.msrp):"—"}</td><td>${m.amz}</td></tr>`;
+      html += `<tr><td>${esc(m.m)}</td><td class="price">${m.official!=null?fmt(m.official)+(m.range2?" – "+fmt(m.range2):""):"（无 D2C）"}</td>
+      <td class="price" style="color:var(--sub)">${m.msrp!=null?fmt(m.msrp):"—"}</td><td>${esc(m.amz)}</td></tr>`;
     });
     html += `</tbody></table>`;
   });
@@ -476,7 +505,7 @@ function idealoShopsLine(pid, cc, ch){
   if (ch.key !== "idealo") return "";
   const k = pid+"|"+cc;
   const txt = state.idealoShops[k] || ch.shopsDefault || "待复核";
-  return `<div class="shops">🏷 最低价商家：${txt} <span class="edit" onclick="editShops('${pid}','${cc}')">✎</span></div>`;
+  return `<div class="shops">最低价商家：${esc(txt)} <button class="edit" type="button" onclick="editShops('${pid}','${cc}')" aria-label="编辑 Idealo 最低价来源商家">✎</button></div>`;
 }
 function editShops(pid, cc){
   const k = pid+"|"+cc;
@@ -499,18 +528,18 @@ function viewCountry(cc){
       html += `<tr>
         <td><span style="color:${CH_META[ch.key].color}">●</span> ${label}${ch.official?'<span class="chip official">官方</span>':''}${ch.tp?'<span class="chip tp">第三方</span>':''}${CH_META[ch.key].auto?'<span class="chip auto">自动</span>':''}${idealoShopsLine(p.id, cc, ch)}</td>
         <td class="price">${price!=null
-          ? `<span class="editable" contenteditable data-pid="${p.id}" data-cc="${cc}" data-ch="${ch.key}">${price}</span> €${ch.strike?`<span class="strike">${fmt(ch.strike)}</span>`:""}`
-          : `<span class="chip na">${ch.note||"无"}</span> <a href="javascript:void(0)" style="font-size:12px" onclick="fillPrice('${p.id}','${cc}','${ch.key}')">填入价格</a>`}</td>
+          ? `<span class="editable" contenteditable="true" inputmode="decimal" role="textbox" aria-label="${esc(p.name)} ${esc(label)} 当前价格" data-pid="${p.id}" data-cc="${cc}" data-ch="${ch.key}">${price}</span> €${ch.strike?`<span class="strike">${fmt(ch.strike)}</span>`:""}`
+          : `<span class="chip na">${esc(ch.note||"无")}</span> <button class="inline-action" type="button" onclick="fillPrice('${p.id}','${cc}','${ch.key}')">填入价格</button>`}</td>
         <td>${ch.key==="aiper" ? '<span class="diff-zero">基准</span>' : diffSpan(price, base)}</td>
         <td>${targetChip(p.id, cc, price)}</td>
-        <td><a href="${ch.url}" target="_blank">复核 ↗</a>${ch.note&&price!=null?` <span style="font-size:11px;color:var(--warn)">${ch.note}</span>`:""}</td>
+        <td>${linkTo(ch.url, "复核 ↗")}${ch.note&&price!=null?` <span style="font-size:11px;color:var(--warn)">${esc(ch.note)}</span>`:""}</td>
       </tr>`;
     });
     html += `</tbody></table>`;
     html += `<div class="chartbox">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center">
         <span><b style="font-size:13px">📈 价格趋势（小时级）</b>
-          <span class="rangebtns">${[["24h",1],["7天",7],["30天",30],["全部",0]].map(([lb,d])=>`<button class="${d===trendRange?'active':''}" onclick="setTrendRange(${d})">${lb}</button>`).join("")}</span>
+          <span class="rangebtns">${[["24h",1],["7天",7],["30天",30],["全部",0]].map(([lb,d])=>`<button type="button" class="${d===trendRange?'active':''}" onclick="setTrendRange(${d})">${lb}</button>`).join("")}</span>
         </span>
         <span style="font-size:11px;color:var(--sub)">虚线 = 目标价 · 图例可点击显隐</span>
       </div>
@@ -520,8 +549,8 @@ function viewCountry(cc){
     const asin = p.asin[cc];
     if (asin) {
       html += `<div class="keepa"><b style="font-size:13px">🕰 Amazon.${cc} 长期历史（Keepa 实时图）</b>
-        <span class="rangebtns">${[30,90,365].map(r=>`<button class="${r===keepaRange?'active':''}" onclick="setKeepaRange(${r})">${r}天</button>`).join("")}</span>
-        <img loading="lazy" src="https://graph.keepa.com/pricehistory.png?asin=${asin}&domain=${cc}&new=1&amazon=1&salesrank=0&range=${keepaRange}&width=880&height=250" alt="keepa ${p.name}">
+        <span class="rangebtns">${[30,90,365].map(r=>`<button type="button" class="${r===keepaRange?'active':''}" onclick="setKeepaRange(${r})">${r}天</button>`).join("")}</span>
+        <img loading="lazy" decoding="async" src="https://graph.keepa.com/pricehistory.png?asin=${esc(asin)}&domain=${cc}&new=1&amazon=1&salesrank=0&range=${keepaRange}&width=880&height=250" alt="Keepa Amazon ${cc.toUpperCase()} ${esc(p.name)} 长期价格历史图">
       </div>`;
     }
   });
@@ -530,8 +559,8 @@ function viewCountry(cc){
 function setKeepaRange(r){ keepaRange = r; renderViews(); }
 function fillPrice(pid, cc, ch){
   const v = prompt("输入当前实际价格（EUR，仅数字）：");
-  const n = parseFloat((v||"").replace(",","."));
-  if (!isNaN(n)) recordManual(pid+"|"+cc+"|"+ch, n);
+  const n = parsePrice(v);
+  if (n != null) recordManual(pid+"|"+cc+"|"+ch, n);
 }
 function recordManual(key, val){
   const ts = nowHourTs();
@@ -604,8 +633,8 @@ function drawTrend(p, cc){
   svg.innerHTML = out;
   const items = [...chKeys.map(k=>({k, label:CH_META[k].label, color:CH_META[k].color})), {k:"target", label:"目标价", color:"#eef2fa"}];
   legendEl.innerHTML = items.map(it =>
-    `<span class="${state.hiddenSeries[hiddenKey(it.k)]?"off":""}" onclick="toggleSeries('${p.id}','${cc}','${it.k}')">
-      <span class="dot" style="background:${it.color}"></span>${it.label}</span>`).join("");
+    `<button type="button" class="${state.hiddenSeries[hiddenKey(it.k)]?"off":""}" onclick="toggleSeries('${p.id}','${cc}','${it.k}')" aria-pressed="${!state.hiddenSeries[hiddenKey(it.k)]}">
+      <span class="dot" style="background:${it.color}"></span>${esc(it.label)}</button>`).join("");
 }
 function toggleSeries(pid, cc, k){
   const key = pid+"|"+cc+"|"+k;
@@ -629,7 +658,7 @@ function viewCalendar(){
   for (let d=1; d<=daysInMonth; d++){
     const ds = `${calMonth}-${String(d).padStart(2,"0")}`;
     const t = targetFor(calPid, calCc, ds);
-    cells += `<div class="calcell ${ds===todayStr()?"today":""}" onclick="editCell(event,'${ds}')" id="cell-${ds}">
+    cells += `<div class="calcell ${ds===todayStr()?"today":""}" role="button" tabindex="0" onclick="editCell(event,'${ds}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editCell(event,'${ds}')}" id="cell-${ds}">
       <div class="d">${d}${ds===todayStr()?" · 今天":""}</div>
       <div class="t ${t==null?"unset":""}">${t==null?"+":fmt(t)}</div></div>`;
   }
@@ -637,9 +666,9 @@ function viewCalendar(){
   <div class="calctrl">
     <select onchange="calPid=this.value;renderViews()">${prodOpts}</select>
     <select onchange="calCc=this.value;renderViews()">${ccOpts}</select>
-    <button class="btn" onclick="calNav(-1)">← 上月</button>
+    <button class="btn" type="button" onclick="calNav(-1)">← 上月</button>
     <b style="min-width:92px;text-align:center">${calMonth}</b>
-    <button class="btn" onclick="calNav(1)">下月 →</button>
+    <button class="btn" type="button" onclick="calNav(1)">下月 →</button>
   </div>
   <div class="calctrl" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px">
     <b style="font-size:13px">批量填充：</b>
@@ -648,8 +677,8 @@ function viewCalendar(){
     <input type="date" id="bulkTo" value="${calMonth}-${String(daysInMonth).padStart(2,"0")}">
     <input type="number" id="bulkPrice" placeholder="目标价 €" step="0.01">
     <label style="font-size:13px;color:var(--sub)"><input type="checkbox" id="bulkAllCc"> 同时应用到三国</label>
-    <button class="btn primary" onclick="bulkFill(false)">填充</button>
-    <button class="btn danger" onclick="bulkFill(true)">清除区间</button>
+    <button class="btn primary" type="button" onclick="bulkFill(false)">填充</button>
+    <button class="btn danger" type="button" onclick="bulkFill(true)">清除区间</button>
   </div>
   <div class="calgrid">${cells}</div>
   <div class="note">💡 大促（Prime Day / 黑五）前把促销档期目标价批量填入；每天看各国家 Tab 的「vs 今日目标价」列 —— 红色 = 有渠道破价或未跟价。</div>`;
@@ -670,16 +699,16 @@ function editCell(ev, ds){
   cell.querySelector("input").focus();
 }
 function saveCell(ds, val){
-  const n = parseFloat((val||"").replace(",","."));
+  const n = parsePrice(val);
   const k = calPid+"|"+calCc+"|"+ds;
-  if (val === "" || isNaN(n)) delete state.targets[k]; else state.targets[k] = n;
+  if (val === "" || n == null) delete state.targets[k]; else state.targets[k] = n;
   save(); renderViews();
 }
 function bulkFill(clear){
   const from = document.getElementById("bulkFrom").value, to = document.getElementById("bulkTo").value;
-  const price = parseFloat(document.getElementById("bulkPrice").value);
+  const price = parsePrice(document.getElementById("bulkPrice").value);
   const allCc = document.getElementById("bulkAllCc").checked;
-  if (!from || !to || (!clear && isNaN(price))) { alert("请填写日期区间和目标价"); return; }
+  if (!from || !to || (!clear && price == null)) { alert("请填写日期区间和目标价"); return; }
   const ccs = allCc ? Object.keys(COUNTRIES) : [calCc];
   for (let d = new Date(from+"T12:00"); d <= new Date(to+"T12:00"); d.setDate(d.getDate()+1)){
     const ds = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -694,9 +723,13 @@ function bulkFill(clear){
 /* ════════════════ 编辑 / 导入导出 ════════════════ */
 function bindEditables(){
   document.querySelectorAll(".editable").forEach(el => {
+    el.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); el.blur(); }
+      if (ev.key === "Escape") { ev.preventDefault(); renderViews(); }
+    });
     el.addEventListener("blur", () => {
-      const v = parseFloat(el.textContent.replace(",",".").replace(/[^\d.]/g,""));
-      if (isNaN(v)) { renderViews(); return; }
+      const v = parsePrice(el.textContent);
+      if (v == null) { renderViews(); return; }
       const cur = curPrice(el.dataset.pid, el.dataset.cc, el.dataset.ch);
       if (v !== cur) recordManual(el.dataset.pid+"|"+el.dataset.cc+"|"+el.dataset.ch, v);
     });
@@ -707,9 +740,11 @@ function exportAll(){
     targets:state.targets, manualHistory:state.manualHistory, idealoShops:state.idealoShops,
     fullHistory:histAll()}, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  a.href = url;
   a.download = `aiper-gtm-data-${todayStr()}.json`;
   a.click();
+  URL.revokeObjectURL(url);
 }
 function importAll(input){
   const f = input.files[0]; if (!f) return;
@@ -738,6 +773,18 @@ function resetLocal(){
 const _h = histAll();
 document.getElementById("lastRecord").textContent = _h.length ? _h[_h.length-1].ts : "—";
 document.getElementById("todayLabel").textContent = todayStr();
+document.getElementById("exportBtn").addEventListener("click", exportAll);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+document.getElementById("resetBtn").addEventListener("click", resetLocal);
+window.addEventListener("hashchange", () => {
+  const id = location.hash.replace("#","");
+  if (TABS.some(t=>t.id===id) && id !== activeTab) {
+    activeTab = id;
+    renderTabs();
+    renderViews();
+  }
+});
 renderTabs(); renderViews();
 </script>
 </body>
