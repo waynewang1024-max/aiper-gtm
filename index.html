@@ -166,6 +166,7 @@
 
 <script src="aiper-gtm-feed.js"></script>
 <script src="aiper-gtm-feed-local.js"></script>
+<script src="aiper-gtm-feed-manual.js"></script>
 <script>
 /* ════════════════ 内置基础数据（渠道定义 + 首日快照） ════════════════ */
 const SEED_TS = "2026-07-03 18:00";
@@ -321,8 +322,9 @@ function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
 function histAll(){
   const feed = Array.isArray(window.GTM_FEED) ? window.GTM_FEED : [];            // 云端 Actions：官网/eRobot/Irripiscine/pool-systems
   const feedLocal = Array.isArray(window.GTM_FEED_LOCAL) ? window.GTM_FEED_LOCAL : []; // 本地 Mac：Amazon/Boulanger（机房 IP 被拦）
+  const feedManual = Array.isArray(window.GTM_FEED_MANUAL) ? window.GTM_FEED_MANUAL : []; // 人工核价（反爬渠道，仓库维护）
   const byTs = {};
-  [...SEED_HISTORY, ...feed, ...feedLocal, ...(state.manualHistory||[])].forEach(h => {
+  [...SEED_HISTORY, ...feed, ...feedLocal, ...feedManual, ...(state.manualHistory||[])].forEach(h => {
     byTs[h.ts] = Object.assign(byTs[h.ts]||{}, h.prices);
   });
   return Object.keys(byTs).sort().map(ts => ({ts, prices:byTs[ts]}));
