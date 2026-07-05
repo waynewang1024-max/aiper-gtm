@@ -17,9 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Run price scraper
+      - name: Run price scraper (cloud targets)
+        env:
+          GTM_MODE: cloud
         run: python3 refresh.py
 
       - name: Commit updated feed

@@ -5,15 +5,19 @@ Aiper EU GTM 每小时价格记录器
 由 crontab 每小时调用一次；抓取可自动访问的渠道价格，追加到 aiper-gtm-feed.js。
 被反爬屏蔽的渠道（Idealo/Hornbach/Cdiscount/MyPiscine/LeroyMerlin.es）不在此列，需人工在页面里复核回填。
 """
-import json, re, ssl, sys, time, urllib.request
+import json, os, re, ssl, sys, time, urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("Europe/Paris")   # 本地 Mac 与 GitHub Actions 统一用巴黎时间
 
+# 双源分工：GitHub Actions 的机房 IP 会被 Amazon/Boulanger 拦截（实测 2026-07-05），
+# 所以云端(GTM_MODE=cloud)只抓其余渠道；Amazon/Boulanger 由本地 Mac 抓，写入独立文件。
+MODE = os.environ.get("GTM_MODE", "local")   # cloud | local
 HOME = Path(__file__).resolve().parent
-FEED = HOME / "aiper-gtm-feed.js"
+FEED = HOME / ("aiper-gtm-feed.js" if MODE == "cloud" else "aiper-gtm-feed-local.js")
+FEED_VAR = "GTM_FEED" if MODE == "cloud" else "GTM_FEED_LOCAL"
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 CTX = ssl.create_default_context()
@@ -83,9 +87,15 @@ TARGETS = [
     ("v3|fr|irripiscine", "https://www.irripiscine.fr/produit/robot-piscine-sans-fil-aiper-scuba-v3", p_jsonld, "fr-FR"),
 ]
 
+CLOUD_BLOCKED = ("amazon", "boulanger")   # 机房 IP 抓不到的渠道
+def my_targets():
+    if MODE == "cloud":
+        return [t for t in TARGETS if t[0].split("|")[2] not in CLOUD_BLOCKED]
+    return [t for t in TARGETS if t[0].split("|")[2] in CLOUD_BLOCKED]
+
 def load_feed():
     if not FEED.exists(): return []
-    m = re.search(r'window\.GTM_FEED\s*=\s*(\[.*\]);?\s*$', FEED.read_text(), re.S)
+    m = re.search(r'window\.\w+\s*=\s*(\[.*\]);?\s*$', FEED.read_text(), re.S)
     if not m: return []
     try: return json.loads(m.group(1))
     except Exception: return []
@@ -94,7 +104,7 @@ def main():
     now = datetime.now(TZ)
     ts = now.strftime("%Y-%m-%d %H:00")
     prices, errors = {}, []
-    for key, url, parser, lang in TARGETS:
+    for key, url, parser, lang in my_targets():
         try:
             v = parser(fetch(url, lang))
             if v is None: errors.append(f"{key}: no price matched"); continue
@@ -110,9 +120,9 @@ def main():
     if prices: feed.append({"ts": ts, "prices": prices})
     cutoff = (now - timedelta(days=90)).strftime("%Y-%m-%d %H:00")
     feed = sorted([e for e in feed if e["ts"] >= cutoff], key=lambda e: e["ts"])
-    FEED.write_text("// Aiper GTM 小时级价格记录（refresh.py 自动生成，勿手改）\n"
-                    "window.GTM_FEED = " + json.dumps(feed, ensure_ascii=False) + ";\n")
-    print(f"[{ts}] recorded {len(prices)} prices, {len(errors)} errors", *errors, sep="\n  ")
+    FEED.write_text(f"// Aiper GTM 小时级价格记录（refresh.py {MODE} 模式自动生成，勿手改）\n"
+                    f"window.{FEED_VAR} = " + json.dumps(feed, ensure_ascii=False) + ";\n")
+    print(f"[{ts}] mode={MODE} recorded {len(prices)} prices, {len(errors)} errors", *errors, sep="\n  ")
 
 if __name__ == "__main__":
     main()
